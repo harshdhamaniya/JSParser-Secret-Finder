@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Parser</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}"> <!-- Favicon -->
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #007bff;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            display: inline-block;
+        }
+
+        .navbar a:hover {
+            background-color: #0056b3;
+            border-radius: 4px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        button {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .output-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .output {
+            background: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            flex: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .output h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+
+        .output .result-heading {
+            font-size: 17px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .output pre {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="https://github.com/harshdhamaniya" target="_blank">GitHub</a>
+        <a href="https://www.linkedin.com/in/harshdhamaniya/" target="_blank">Developer</a>
+    </div>
+
+    <div class="container">
+        <h2>URL Parser</h2>
+        <textarea id="urlInput" placeholder="Paste URLs here, one per line..."></textarea>
+        <div class="button-group">
+            <button onclick="parseUrls()">Parse URLs</button>
+            <button onclick="clearFields()">Clear</button>
+            <button onclick="copyEndpoints()">Copy Endpoints</button>
+            <button onclick="saveToPdf()">Save to PDF</button>
+        </div>
+
+        <div class="output-container">
+            <div id="endpointsOutput" class="output">
+                <h3>Endpoints</h3>
+                <!-- Endpoints will be displayed here -->
+            </div>
+            <div id="sensitiveInfoOutput" class="output">
+                <h3>Sensitive Information</h3>
+                <!-- Sensitive information will be displayed here -->
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error"></div>
+    </div>
+
+    <script>
+        let results = [];
+    
+        function parseUrls() {
+            const urls = document.getElementById('urlInput').value;
+            const endpointsOutput = document.getElementById('endpointsOutput');
+            const sensitiveInfoOutput = document.getElementById('sensitiveInfoOutput');
+            const errorMessage = document.getElementById('errorMessage');
+    
+            endpointsOutput.innerHTML = '<h3>Endpoints</h3>';
+            sensitiveInfoOutput.innerHTML = '<h3>Sensitive Information</h3>';
+            errorMessage.innerHTML = '';
+    
+            // Validate and sanitize URLs
+            const validUrls = urls.split('\n').map(url => url.trim()).filter(url => {
+                const urlRegex = /^(http|https):\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$/;
+                return urlRegex.test(url);
+            });
+    
+            if (validUrls.length === 0) {
+                errorMessage.innerHTML = 'No valid URLs found.';
+                return;
+            }
+    
+            fetch('/parse_urls', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'urls': validUrls.join('\n')
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                results = data.results;
+                if (results.length === 0) {
+                    endpointsOutput.innerHTML += '<p>No results found.</p>';
+                    sensitiveInfoOutput.innerHTML += '<p>No sensitive information found.</p>';
+                } else {
+                    results.forEach(result => {
+                        if (result.endpoint) {
+                            endpointsOutput.innerHTML += `<p class="result-heading">Endpoint found at ${result.url}:</p><pre>${result.endpoint}</pre>`;
+                        }
+                        if (result.sensitive_info) {
+                            sensitiveInfoOutput.innerHTML += `<p class="result-heading">Sensitive Information found at ${result.url}:</p><pre>${result.sensitive_info.join('\n')}</pre>`;
+                        }
+                        if (result.error) {
+                            errorMessage.innerHTML = 'Error: ' + result.error;
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                errorMessage.innerHTML = 'Error processing URLs: ' + error;
+            });
+        }
+    
+        function clearFields() {
+            document.getElementById('urlInput').value = '';
+            document.getElementById('endpointsOutput').innerHTML = '<h3>Endpoints</h3>';
+            document.getElementById('sensitiveInfoOutput').innerHTML = '<h3>Sensitive Information</h3>';
+        }
+    
+        function copyEndpoints() {
+            let endpointsText = '';
+            results.forEach(result => {
+                if (result.endpoint) {
+                    endpointsText += `${result.url}: ${result.endpoint}\n`;
+                }
+            });
+    
+            navigator.clipboard.writeText(endpointsText)
+                .then(() => alert('Endpoints copied to clipboard!'))
+                .catch(err => alert('Failed to copy endpoints: ' + err));
+        }
+    
+        function saveToPdf() {
+            fetch('/generate_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ results: results })
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'endpoints_results.pdf';
+                a.click();
+                URL.revokeObjectURL(url);
+            })
+            .catch(err => alert('Failed to save PDF: ' + err));
+        }
+    </script>    
+</body>
+</html>
