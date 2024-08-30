@@ -1,6 +1,9 @@
 # JSParser - Secret-Finder
 **JSParser JSParser - Secret-Finder** is a Python-based tool designed to analyze JavaScript files, extract direct API endpoints, and identify sensitive information such as API keys, tokens, and credentials. The tool is built using Flask and provides an easy-to-use web interface to perform these tasks.
 
+![image](https://github.com/user-attachments/assets/e022dceb-c125-4c43-81c1-2975fa955ba6)
+
+
 ## Features
 - **Endpoint Extraction:** Detects and extracts direct API URLs from JavaScript files.
 - **Sensitive Information Detection:** Identifies and extracts sensitive information, including API keys, OAuth tokens, and private keys.
