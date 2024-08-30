@@ -13,7 +13,7 @@ Installation
 Clone the Repository
 
 ```bash
-git clone https://github.com/<your-github-username>/JSParser.git
+git clone https://github.com/harshdhamaniya/JSParser-Secret-Finder.git
 cd JSParser
 ```
 
