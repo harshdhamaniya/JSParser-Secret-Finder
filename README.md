@@ -14,7 +14,7 @@ Clone the Repository
 
 ```bash
 git clone https://github.com/harshdhamaniya/JSParser-Secret-Finder.git
-cd JSParser
+cd JSParser-Secret-Finder
 ```
 
 ## Create a Virtual Environment (Optional but Recommended)
